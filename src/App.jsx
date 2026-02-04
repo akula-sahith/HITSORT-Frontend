@@ -316,10 +316,11 @@ const DashboardPage = ({ token, onShowToast }) => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalCards: 0,
-    totalRevenue: 0,
-    totalGames: 0
-  });
+  totalCards: 0,
+  soldCards: 0,
+  totalRevenue: 0,
+  totalGames: 0
+});
 
   useEffect(() => {
     fetchCards();
@@ -333,9 +334,13 @@ const DashboardPage = ({ token, onShowToast }) => {
       // Calculate stats
       const totalRevenue = data.reduce((sum, card) => sum + (card.amount || 0), 0);
 const totalGames = data.reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
+const soldCards = data.filter(
+  card => card.sellerName && card.sellerName !== "NOT_SOLD"
+).length;
 
 setStats({
   totalCards: data.length,
+  soldCards,
   totalRevenue,
   totalGames
 });
@@ -399,6 +404,19 @@ setStats({
             <p className="stat-value">{stats.totalGames}</p>
           </div>
         </div>
+
+        <div className="stat-card">
+  <div
+    className="stat-icon"
+    style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
+  >
+    <CreditCard size={24} />
+  </div>
+  <div className="stat-content">
+    <p className="stat-label">Cards Sold</p>
+    <p className="stat-value">{stats.soldCards}</p>
+  </div>
+</div>
       </div>
 
       <div className="table-container">
