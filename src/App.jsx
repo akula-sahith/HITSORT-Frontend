@@ -328,17 +328,18 @@ const DashboardPage = ({ token, onShowToast }) => {
   const fetchCards = async () => {
     try {
       const data = await api.getCards(token);
-      setCards(data.cards || []);
+      setCards(data);
       
       // Calculate stats
-      const totalRevenue = (data.cards || []).reduce((sum, card) => sum + (card.amount || 0), 0);
-      const totalGames = (data.cards || []).reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
-      
-      setStats({
-        totalCards: (data.cards || []).length,
-        totalRevenue,
-        totalGames
-      });
+      const totalRevenue = data.reduce((sum, card) => sum + (card.amount || 0), 0);
+const totalGames = data.reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
+
+setStats({
+  totalCards: data.length,
+  totalRevenue,
+  totalGames
+});
+
     } catch (err) {
       onShowToast('Failed to load dashboard data', 'error');
     } finally {
