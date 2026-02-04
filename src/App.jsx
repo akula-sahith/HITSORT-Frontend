@@ -160,9 +160,9 @@ const UpdateCardPage = ({ token, onShowToast }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const sellerNames = ['Seller A', 'Seller B', 'Seller C', 'Seller D', 'Seller E'];
-  const gameOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  const amountOptions = [0, 39, 49, 69, 79];
+  const sellerNames = ['Sahith', 'Pandu', 'Bharath', 'Manoj', 'Anand','Ratnakar','Yagnesh','Pavan'];
+  const gameOptions = [1, 2 ];
+  const amountOptions = [0, 39, 49, 59, 79 , 40 , 50 , 60 , 80];
   const paymentTypes = ['UPI', 'CASH', 'REFERRED'];
 
   const handleSubmit = async (e) => {
