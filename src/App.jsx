@@ -162,7 +162,7 @@ const UpdateCardPage = ({ token, onShowToast }) => {
 
   const sellerNames = ['Sahith', 'Pandu', 'Bharath', 'Manoj', 'Anand','Ratnakar','Yagnesh','Pavan'];
   const gameOptions = [1, 2 ];
-  const amountOptions = [0, 39, 49, 59, 79 , 40 , 50 , 60 , 80];
+  const amountOptions = [0, 39, 49, 69, 79 , 40 , 50 , 70 , 80];
   const paymentTypes = ['UPI', 'CASH', 'REFERRED'];
 
   const handleSubmit = async (e) => {
