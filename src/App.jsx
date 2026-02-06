@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle2, LogOut, CreditCard, TrendingUp, DollarSign, User, Users, BarChart3, Menu, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, LogOut, CreditCard, TrendingUp, DollarSign, User, Users, BarChart3, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // ============================================================================
 // API Configuration & Utilities
@@ -319,6 +319,12 @@ const DashboardPage = ({ token, onShowToast }) => {
     totalGames: 0
   });
   const [sellerStats, setSellerStats] = useState([]);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterSeller, setFilterSeller] = useState('');
+  const cardsPerPage = 50;
 
   useEffect(() => {
     fetchCards();
@@ -327,23 +333,31 @@ const DashboardPage = ({ token, onShowToast }) => {
   const fetchCards = async () => {
     try {
       const data = await api.getCards(token);
-      setCards(data);
       
-      const totalRevenue = data.reduce((sum, card) => sum + (card.amount || 0), 0);
-      const totalGames = data.reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
-      const soldCards = data.filter(
+      // Sort cards by card ID to ensure consistent display
+      const sortedData = data.sort((a, b) => {
+        const numA = parseInt(a.cardId?.replace('HS', '') || '0');
+        const numB = parseInt(b.cardId?.replace('HS', '') || '0');
+        return numA - numB;
+      });
+      
+      setCards(sortedData);
+      
+      const totalRevenue = sortedData.reduce((sum, card) => sum + (card.amount || 0), 0);
+      const totalGames = sortedData.reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
+      const soldCards = sortedData.filter(
         card => card.sellerName && card.sellerName !== "NOT_SOLD"
       ).length;
 
       setStats({
-        totalCards: data.length,
+        totalCards: sortedData.length,
         soldCards,
         totalRevenue,
         totalGames
       });
 
       const sellerMap = {};
-      data.forEach(card => {
+      sortedData.forEach(card => {
         if (card.sellerName && card.sellerName !== "NOT_SOLD") {
           if (!sellerMap[card.sellerName]) {
             sellerMap[card.sellerName] = {
@@ -379,12 +393,68 @@ const DashboardPage = ({ token, onShowToast }) => {
     });
   };
 
+  // Filter and search logic
+  const filteredCards = cards.filter(card => {
+    const matchesSearch = searchTerm === '' || 
+      card.cardId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      card.sellerName?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSeller = filterSeller === '' || card.sellerName === filterSeller;
+    
+    return matchesSearch && matchesSeller;
+  });
+
+  // Pagination logic
+  const indexOfLastCard = currentPage * cardsPerPage;
+  const indexOfFirstCard = indexOfLastCard - cardsPerPage;
+  const currentCards = filteredCards.slice(indexOfFirstCard, indexOfLastCard);
+  const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+
+  // Get unique sellers for filter
+  const uniqueSellers = ['', ...new Set(cards.map(card => card.sellerName).filter(name => name && name !== 'NOT_SOLD'))];
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
         <div>
           <h1>Dashboard</h1>
-          <p>Overview of all card transactions</p>
+          <p>Overview of all {stats.totalCards} cards</p>
         </div>
         <button onClick={fetchCards} className="btn-secondary" disabled={loading}>
           {loading ? 'Refreshing...' : 'Refresh'}
@@ -487,7 +557,37 @@ const DashboardPage = ({ token, onShowToast }) => {
         <div className="section-header">
           <div className="section-title">
             <BarChart3 size={24} />
-            <h2>Recent Transactions</h2>
+            <h2>All Cards ({filteredCards.length})</h2>
+          </div>
+        </div>
+
+        <div className="filters-section">
+          <div className="filter-group">
+            <input
+              type="text"
+              placeholder="Search by Card ID or Seller..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="search-input"
+            />
+          </div>
+          <div className="filter-group">
+            <select
+              value={filterSeller}
+              onChange={(e) => {
+                setFilterSeller(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="filter-select"
+            >
+              <option value="">All Sellers</option>
+              {uniqueSellers.slice(1).map(seller => (
+                <option key={seller} value={seller}>{seller}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -497,52 +597,95 @@ const DashboardPage = ({ token, onShowToast }) => {
               <div className="spinner"></div>
               <p>Loading cards...</p>
             </div>
-          ) : cards.length === 0 ? (
+          ) : filteredCards.length === 0 ? (
             <div className="empty-state">
               <CreditCard size={48} />
               <h3>No cards found</h3>
-              <p>Start by updating your first card</p>
+              <p>{searchTerm || filterSeller ? 'Try adjusting your filters' : 'Start by updating your first card'}</p>
             </div>
           ) : (
-            <div className="table-wrapper">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Card ID</th>
-                    <th>Seller</th>
-                    <th>Games</th>
-                    <th>Amount</th>
-                    <th>Payment</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cards.map((card, index) => (
-                    <tr key={card.cardId || index}>
-                      <td>
-                        <span className="card-id-badge">{card.cardId}</span>
-                      </td>
-                      <td>
-                        <div className="seller-cell">
-                          <User size={16} />
-                          <span>{card.sellerName}</span>
-                        </div>
-                      </td>
-                      <td>{card.numberOfGames}</td>
-                      <td>
-                        <span className="amount-cell">₹{card.amount}</span>
-                      </td>
-                      <td>
-                        <span className={`payment-badge ${card.paymentType?.toLowerCase()}`}>
-                          {card.paymentType}
-                        </span>
-                      </td>
-                      <td className="date-cell">{formatDate(card.date)}</td>
+            <>
+              <div className="table-info">
+                <p>Showing {indexOfFirstCard + 1} - {Math.min(indexOfLastCard, filteredCards.length)} of {filteredCards.length} cards</p>
+              </div>
+              <div className="table-wrapper">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Card ID</th>
+                      <th>Seller</th>
+                      <th>Games</th>
+                      <th>Amount</th>
+                      <th>Payment</th>
+                      <th>Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {currentCards.map((card, index) => (
+                      <tr key={card.cardId || index}>
+                        <td>
+                          <span className="card-id-badge">{card.cardId}</span>
+                        </td>
+                        <td>
+                          <div className="seller-cell">
+                            <User size={16} />
+                            <span>{card.sellerName}</span>
+                          </div>
+                        </td>
+                        <td>{card.numberOfGames || 0}</td>
+                        <td>
+                          <span className="amount-cell">₹{card.amount || 0}</span>
+                        </td>
+                        <td>
+                          <span className={`payment-badge ${card.paymentType?.toLowerCase() || 'none'}`}>
+                            {card.paymentType || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="date-cell">{formatDate(card.date)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    <ChevronLeft size={18} />
+                    Previous
+                  </button>
+
+                  <div className="pagination-numbers">
+                    {getPageNumbers().map((page, index) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    Next
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -660,7 +803,7 @@ const App = () => {
 };
 
 // ============================================================================
-// Optimized Styles with HitSort Theme
+// Optimized Styles with HitSort Theme + Pagination
 // ============================================================================
 
 const styles = `
@@ -1104,6 +1247,44 @@ const styles = `
     color: var(--text-primary);
   }
 
+  /* ========== Filters Section ========== */
+  .filters-section {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-group {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .search-input,
+  .filter-select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border);
+    border-radius: 0.75rem;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .search-input:focus,
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.1);
+    background: var(--bg-secondary);
+  }
+
+  .search-input::placeholder {
+    color: var(--text-muted);
+  }
+
   /* ========== Seller Stats ========== */
   .seller-stats-section,
   .transactions-section {
@@ -1284,6 +1465,18 @@ const styles = `
     box-shadow: var(--shadow-sm);
   }
 
+  .table-info {
+    padding: 1rem 1.25rem;
+    background: rgba(34, 211, 238, 0.05);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-info p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
   .table-wrapper {
     overflow-x: auto;
   }
@@ -1380,9 +1573,97 @@ const styles = `
     border: 2px solid rgba(168, 85, 247, 0.3);
   }
 
+  .payment-badge.none {
+    background: rgba(107, 114, 128, 0.15);
+    color: var(--text-muted);
+    border: 2px solid rgba(107, 114, 128, 0.3);
+  }
+
   .date-cell {
     color: var(--text-secondary);
     font-size: 0.8125rem;
+  }
+
+  /* ========== Pagination ========== */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 1.25rem;
+    border-top: 1px solid var(--border);
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    background: var(--bg-secondary);
+    border-color: var(--blue-primary);
+    color: var(--blue-primary);
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .pagination-number {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .pagination-number:hover {
+    background: var(--bg-secondary);
+    border-color: var(--blue-primary);
+    color: var(--blue-primary);
+  }
+
+  .pagination-number.active {
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--blue-primary) 100%);
+    border-color: transparent;
+    color: #000;
+    font-weight: 700;
+  }
+
+  .pagination-ellipsis {
+    color: var(--text-muted);
+    padding: 0 0.5rem;
+    font-weight: 700;
   }
 
   /* ========== Loading & Empty States ========== */
@@ -1590,6 +1871,24 @@ const styles = `
 
     .stat-value {
       font-size: 1.5rem;
+    }
+
+    .filters-section {
+      flex-direction: column;
+    }
+
+    .filter-group {
+      min-width: auto;
+    }
+
+    .pagination {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .pagination-btn {
+      width: 100%;
+      justify-content: center;
     }
   }
 
