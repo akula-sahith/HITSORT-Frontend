@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle2, LogOut, CreditCard, TrendingUp, DollarSign, User, Users, BarChart3 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, LogOut, CreditCard, TrendingUp, DollarSign, User, Users, BarChart3, Menu, X } from 'lucide-react';
 
 // ============================================================================
 // API Configuration & Utilities
@@ -51,11 +51,11 @@ const Toast = ({ message, type, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className="toast" style={{ animationDelay: '0s' }}>
+    <div className="toast">
       {type === 'success' ? (
-        <CheckCircle2 size={20} style={{ color: '#10b981', flexShrink: 0 }} />
+        <CheckCircle2 size={20} className="toast-icon success" />
       ) : (
-        <AlertCircle size={20} style={{ color: '#ef4444', flexShrink: 0 }} />
+        <AlertCircle size={20} className="toast-icon error" />
       )}
       <span>{message}</span>
       <button onClick={onClose} className="toast-close">×</button>
@@ -93,11 +93,13 @@ const LoginPage = ({ onLogin }) => {
     <div className="login-container">
       <div className="login-box">
         <div className="login-header">
-          <div className="login-icon">
-            <CreditCard size={32} />
+          <div className="login-logo">
+            <div className="logo-icon">
+              <CreditCard size={40} />
+            </div>
+            <h1>HITSORT</h1>
           </div>
-          <h1>HitSort Admin</h1>
-          <p>Card Management System</p>
+          <p className="login-subtitle">Admin Card Management System</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -108,6 +110,7 @@ const LoginPage = ({ onLogin }) => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
               required
               autoFocus
               disabled={loading}
@@ -121,6 +124,7 @@ const LoginPage = ({ onLogin }) => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
               required
               disabled={loading}
             />
@@ -137,10 +141,6 @@ const LoginPage = ({ onLogin }) => {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        <div className="login-footer">
-          <div className="login-decoration"></div>
-        </div>
       </div>
     </div>
   );
@@ -160,7 +160,7 @@ const UpdateCardPage = ({ token, onShowToast }) => {
   });
   const [loading, setLoading] = useState(false);
 
-  const sellerNames = ['Sahith', 'Pandu', 'Bharath', 'Manoj', 'Anand','Ratnakar','Yagnesh','Pavan'];
+  const sellerNames = ['Sahith', 'Pandu', 'Bharath', 'Manoj', 'Anand', 'Ratnakar', 'Yagnesh', 'Pavan'];
   const gameOptions = [1, 2];
   const amountOptions = [0, 39, 49, 69, 79, 40, 50, 70, 80];
   const paymentTypes = ['UPI', 'CASH', 'REFERRED'];
@@ -181,7 +181,6 @@ const UpdateCardPage = ({ token, onShowToast }) => {
       await api.updateCard(token, payload);
       onShowToast('Card updated successfully!', 'success');
       
-      // Reset form
       setFormData({
         cardId: '',
         sellerName: '',
@@ -205,9 +204,9 @@ const UpdateCardPage = ({ token, onShowToast }) => {
         </div>
       </div>
 
-      <div className="card-form-container">
+      <div className="card-form-wrapper">
         <form onSubmit={handleSubmit} className="card-form">
-          <div className="form-row">
+          <div className="form-grid">
             <div className="form-group">
               <label htmlFor="sellerName">Seller Name</label>
               <select
@@ -245,9 +244,7 @@ const UpdateCardPage = ({ token, onShowToast }) => {
                 />
               </div>
             </div>
-          </div>
 
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="numberOfGames">Number of Games</label>
               <select
@@ -298,7 +295,7 @@ const UpdateCardPage = ({ token, onShowToast }) => {
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn-primary" disabled={loading}>
+            <button type="submit" className="btn-primary btn-large" disabled={loading}>
               {loading ? 'Updating...' : 'Update Card'}
             </button>
           </div>
@@ -332,7 +329,6 @@ const DashboardPage = ({ token, onShowToast }) => {
       const data = await api.getCards(token);
       setCards(data);
       
-      // Calculate overall stats
       const totalRevenue = data.reduce((sum, card) => sum + (card.amount || 0), 0);
       const totalGames = data.reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
       const soldCards = data.filter(
@@ -346,7 +342,6 @@ const DashboardPage = ({ token, onShowToast }) => {
         totalGames
       });
 
-      // Calculate seller-wise stats
       const sellerMap = {};
       data.forEach(card => {
         if (card.sellerName && card.sellerName !== "NOT_SOLD") {
@@ -398,7 +393,7 @@ const DashboardPage = ({ token, onShowToast }) => {
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
+          <div className="stat-icon orange">
             <CreditCard size={24} />
           </div>
           <div className="stat-content">
@@ -408,7 +403,7 @@ const DashboardPage = ({ token, onShowToast }) => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+          <div className="stat-icon green">
             <DollarSign size={24} />
           </div>
           <div className="stat-content">
@@ -418,7 +413,7 @@ const DashboardPage = ({ token, onShowToast }) => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
+          <div className="stat-icon blue">
             <TrendingUp size={24} />
           </div>
           <div className="stat-content">
@@ -428,7 +423,7 @@ const DashboardPage = ({ token, onShowToast }) => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+          <div className="stat-icon purple">
             <CheckCircle2 size={24} />
           </div>
           <div className="stat-content">
@@ -438,7 +433,6 @@ const DashboardPage = ({ token, onShowToast }) => {
         </div>
       </div>
 
-      {/* Seller-wise Statistics */}
       <div className="seller-stats-section">
         <div className="section-header">
           <div className="section-title">
@@ -471,7 +465,7 @@ const DashboardPage = ({ token, onShowToast }) => {
                 </div>
                 <div className="seller-metrics">
                   <div className="metric">
-                    <span className="metric-label">Cards Sold</span>
+                    <span className="metric-label">Cards</span>
                     <span className="metric-value">{seller.cardsSold}</span>
                   </div>
                   <div className="metric">
@@ -489,7 +483,6 @@ const DashboardPage = ({ token, onShowToast }) => {
         )}
       </div>
 
-      {/* Recent Transactions Table */}
       <div className="transactions-section">
         <div className="section-header">
           <div className="section-title">
@@ -516,10 +509,10 @@ const DashboardPage = ({ token, onShowToast }) => {
                 <thead>
                   <tr>
                     <th>Card ID</th>
-                    <th>Seller Name</th>
+                    <th>Seller</th>
                     <th>Games</th>
                     <th>Amount</th>
-                    <th>Payment Type</th>
+                    <th>Payment</th>
                     <th>Date</th>
                   </tr>
                 </thead>
@@ -565,6 +558,7 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('login');
   const [token, setToken] = useState(null);
   const [toast, setToast] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('authToken');
@@ -583,6 +577,7 @@ const App = () => {
     localStorage.removeItem('authToken');
     setToken(null);
     setCurrentPage('login');
+    setMobileMenuOpen(false);
   };
 
   const showToast = (message, type) => {
@@ -591,6 +586,11 @@ const App = () => {
 
   const closeToast = () => {
     setToast(null);
+  };
+
+  const navigateTo = (page) => {
+    setCurrentPage(page);
+    setMobileMenuOpen(false);
   };
 
   if (!token) {
@@ -605,27 +605,37 @@ const App = () => {
   return (
     <div className="app">
       <nav className="navbar">
-        <div className="navbar-brand">
-          <CreditCard size={24} />
-          <span>HitSort Admin</span>
-        </div>
-        <div className="navbar-menu">
-          <button
-            className={currentPage === 'dashboard' ? 'nav-link active' : 'nav-link'}
-            onClick={() => setCurrentPage('dashboard')}
+        <div className="navbar-container">
+          <div className="navbar-brand">
+            <CreditCard size={28} />
+            <span>HITSORT</span>
+          </div>
+          
+          <button 
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            Dashboard
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
-          <button
-            className={currentPage === 'update' ? 'nav-link active' : 'nav-link'}
-            onClick={() => setCurrentPage('update')}
-          >
-            Update Card
-          </button>
-          <button className="btn-logout" onClick={handleLogout}>
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
+
+          <div className={`navbar-menu ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+            <button
+              className={currentPage === 'dashboard' ? 'nav-link active' : 'nav-link'}
+              onClick={() => navigateTo('dashboard')}
+            >
+              Dashboard
+            </button>
+            <button
+              className={currentPage === 'update' ? 'nav-link active' : 'nav-link'}
+              onClick={() => navigateTo('update')}
+            >
+              Update Card
+            </button>
+            <button className="btn-logout" onClick={handleLogout}>
+              <LogOut size={18} />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -650,11 +660,11 @@ const App = () => {
 };
 
 // ============================================================================
-// Styles - Updated with Vibrant Gaming Theme
+// Optimized Styles with HitSort Theme
 // ============================================================================
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
   * {
     margin: 0;
@@ -663,25 +673,36 @@ const styles = `
   }
 
   :root {
-    --bg-primary: #0f1419;
-    --bg-secondary: #1a1f2e;
-    --bg-tertiary: #242938;
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1f2937;
+    --bg-card: #1a2332;
+    
     --text-primary: #ffffff;
-    --text-secondary: #b4bcd0;
+    --text-secondary: #9ca3af;
     --text-muted: #6b7280;
+    
     --border: rgba(255, 255, 255, 0.1);
-    --accent-yellow: #fbbf24;
-    --accent-green: #10b981;
-    --accent-blue: #3b82f6;
-    --accent-purple: #8b5cf6;
-    --accent-orange: #f59e0b;
-    --success: #10b981;
+    --border-focus: rgba(34, 211, 238, 0.5);
+    
+    --green-primary: #22c55e;
+    --green-dark: #16a34a;
+    --blue-primary: #22d3ee;
+    --blue-dark: #06b6d4;
+    --orange: #f97316;
+    --purple: #a855f7;
+    --yellow: #fbbf24;
+    
+    --success: #22c55e;
     --error: #ef4444;
-    --shadow: rgba(0, 0, 0, 0.5);
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
   }
 
   body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -695,111 +716,100 @@ const styles = `
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 1rem;
     background: 
-      radial-gradient(circle at 20% 20%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
       var(--bg-primary);
   }
 
   .login-box {
     background: var(--bg-secondary);
-    border: 2px solid rgba(251, 191, 36, 0.2);
-    border-radius: 20px;
-    padding: 48px;
+    border: 2px solid rgba(34, 211, 238, 0.2);
+    border-radius: 1.25rem;
+    padding: 2.5rem;
     width: 100%;
-    max-width: 440px;
-    box-shadow: 0 20px 60px var(--shadow), 0 0 100px rgba(251, 191, 36, 0.1);
-    animation: fadeInUp 0.6s ease-out;
-  }
-
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
   }
 
   .login-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 2rem;
   }
 
-  .login-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 20px;
-    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
-    border-radius: 20px;
+  .login-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    animation: float 3s ease-in-out infinite;
-    box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
   }
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+  .logo-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--blue-primary) 100%);
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    box-shadow: 0 8px 24px rgba(34, 211, 238, 0.3);
   }
 
-  .login-header h1 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 32px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+  .login-logo h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--blue-primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
   }
 
-  .login-header p {
+  .login-subtitle {
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
   }
 
   .login-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 1.25rem;
   }
 
   .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0.5rem;
   }
 
   .form-group label {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-secondary);
   }
 
   .form-group input,
   .form-group select {
-    padding: 14px 16px;
+    padding: 0.875rem 1rem;
     background: var(--bg-tertiary);
     border: 2px solid var(--border);
-    border-radius: 12px;
+    border-radius: 0.75rem;
     color: var(--text-primary);
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-family: inherit;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    width: 100%;
   }
 
   .form-group input:focus,
   .form-group select:focus {
     outline: none;
-    border-color: var(--accent-yellow);
-    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1);
+    border-color: var(--blue-primary);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.1);
     background: var(--bg-secondary);
   }
 
@@ -812,41 +822,33 @@ const styles = `
   .error-message {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
     background: rgba(239, 68, 68, 0.1);
     border: 2px solid rgba(239, 68, 68, 0.3);
-    border-radius: 10px;
+    border-radius: 0.75rem;
     color: var(--error);
-    font-size: 14px;
-    animation: shake 0.4s ease;
-  }
-
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    75% { transform: translateX(10px); }
+    font-size: 0.875rem;
   }
 
   .btn-primary {
-    padding: 16px 24px;
-    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--blue-primary) 100%);
     color: #000;
     border: none;
-    border-radius: 12px;
-    font-size: 16px;
+    border-radius: 0.75rem;
+    font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Rajdhani', sans-serif;
+    transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
   }
 
   .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
+    box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
   }
 
   .btn-primary:active:not(:disabled) {
@@ -858,23 +860,9 @@ const styles = `
     cursor: not-allowed;
   }
 
-  .login-footer {
-    margin-top: 32px;
-    padding-top: 32px;
-    border-top: 1px solid var(--border);
-  }
-
-  .login-decoration {
-    height: 4px;
-    background: linear-gradient(90deg, var(--accent-yellow), var(--accent-green), var(--accent-blue), var(--accent-purple), var(--accent-yellow));
-    border-radius: 4px;
-    animation: shimmer 3s ease-in-out infinite;
-    background-size: 300% 100%;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 0% 0; }
-    100% { background-position: 300% 0; }
+  .btn-primary.btn-large {
+    width: 100%;
+    padding: 1.125rem 1.5rem;
   }
 
   /* ========== App Layout ========== */
@@ -885,82 +873,91 @@ const styles = `
   }
 
   .navbar {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, #1f2533 100%);
-    border-bottom: 2px solid rgba(251, 191, 36, 0.2);
-    padding: 0 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 80px;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid rgba(34, 211, 238, 0.2);
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-md);
+  }
+
+  .navbar-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4.5rem;
   }
 
   .navbar-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 24px;
-    font-weight: 700;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 900;
     color: var(--text-primary);
-    letter-spacing: 1px;
+    letter-spacing: 2px;
   }
 
   .navbar-brand svg {
-    color: var(--accent-yellow);
+    color: var(--blue-primary);
+  }
+
+  .mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.5rem;
   }
 
   .navbar-menu {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
   }
 
   .nav-link {
-    padding: 12px 24px;
+    padding: 0.75rem 1.25rem;
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-    font-family: 'Rajdhani', sans-serif;
+    border-radius: 0.625rem;
+    transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
   .nav-link:hover {
-    color: var(--accent-yellow);
-    background: rgba(251, 191, 36, 0.1);
+    color: var(--blue-primary);
+    background: rgba(34, 211, 238, 0.1);
   }
 
   .nav-link.active {
-    color: var(--accent-yellow);
-    background: rgba(251, 191, 36, 0.15);
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+    color: var(--blue-primary);
+    background: rgba(34, 211, 238, 0.15);
   }
 
   .btn-logout {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
     background: transparent;
     border: 2px solid var(--border);
     color: var(--text-secondary);
-    border-radius: 10px;
-    font-size: 15px;
+    border-radius: 0.625rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    margin-left: 16px;
-    font-family: 'Rajdhani', sans-serif;
+    transition: all 0.2s ease;
+    margin-left: 1rem;
     text-transform: uppercase;
   }
 
@@ -972,7 +969,7 @@ const styles = `
 
   .main-content {
     flex: 1;
-    padding: 32px;
+    padding: 2rem 1.5rem;
     max-width: 1600px;
     width: 100%;
     margin: 0 auto;
@@ -980,27 +977,27 @@ const styles = `
 
   /* ========== Page Header ========== */
   .page-container {
-    animation: fadeIn 0.4s ease;
+    animation: fadeIn 0.3s ease;
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .page-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 32px;
+    margin-bottom: 2rem;
+    gap: 1rem;
   }
 
   .page-header h1 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 36px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--blue-primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1008,27 +1005,26 @@ const styles = `
 
   .page-header p {
     color: var(--text-secondary);
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 
   .btn-secondary {
-    padding: 12px 24px;
+    padding: 0.75rem 1.25rem;
     background: var(--bg-tertiary);
     border: 2px solid var(--border);
     color: var(--text-primary);
-    border-radius: 10px;
-    font-size: 14px;
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Rajdhani', sans-serif;
+    transition: all 0.2s ease;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .btn-secondary:hover:not(:disabled) {
     background: var(--bg-secondary);
-    border-color: var(--accent-yellow);
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+    border-color: var(--blue-primary);
   }
 
   .btn-secondary:disabled {
@@ -1039,186 +1035,161 @@ const styles = `
   /* ========== Stats Grid ========== */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    margin-bottom: 40px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
   }
 
   .stat-card {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 24px;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 20px;
-    transition: all 0.3s ease;
-    animation: slideUp 0.5s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--accent-yellow), var(--accent-green), var(--accent-blue));
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    gap: 1.25rem;
+    transition: all 0.2s ease;
   }
 
   .stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(251, 191, 36, 0.1);
-    border-color: rgba(251, 191, 36, 0.3);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(34, 211, 238, 0.3);
   }
 
   .stat-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #000;
     flex-shrink: 0;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .stat-icon.orange {
+    background: linear-gradient(135deg, var(--orange) 0%, #ea580c 100%);
+  }
+
+  .stat-icon.green {
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--green-dark) 100%);
+  }
+
+  .stat-icon.blue {
+    background: linear-gradient(135deg, var(--blue-primary) 0%, var(--blue-dark) 100%);
+  }
+
+  .stat-icon.purple {
+    background: linear-gradient(135deg, var(--purple) 0%, #9333ea 100%);
   }
 
   .stat-content {
     flex: 1;
+    min-width: 0;
   }
 
   .stat-label {
-    font-size: 13px;
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 600;
   }
 
   .stat-value {
-    font-size: 32px;
+    font-size: 1.75rem;
     font-weight: 800;
-    font-family: 'Rajdhani', sans-serif;
     color: var(--text-primary);
   }
 
-  /* ========== Seller Stats Section ========== */
-  .seller-stats-section {
-    margin-bottom: 40px;
+  /* ========== Seller Stats ========== */
+  .seller-stats-section,
+  .transactions-section {
+    margin-bottom: 2.5rem;
   }
 
   .section-header {
-    margin-bottom: 24px;
+    margin-bottom: 1.5rem;
   }
 
   .section-title {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0.75rem;
   }
 
   .section-title svg {
-    color: var(--accent-yellow);
+    color: var(--blue-primary);
   }
 
   .section-title h2 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 28px;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
   }
 
   .seller-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
   }
 
   .seller-card {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 24px;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
     position: relative;
-    transition: all 0.3s ease;
-    overflow: hidden;
-  }
-
-  .seller-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+    transition: all 0.2s ease;
   }
 
   .seller-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(34, 211, 238, 0.3);
   }
 
   .seller-rank {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
-    border-radius: 12px;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--green-primary) 0%, var(--blue-primary) 100%);
+    border-radius: 0.625rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 18px;
+    font-size: 1rem;
     font-weight: 700;
     color: #000;
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
   }
 
   .seller-info {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
   }
 
   .seller-avatar {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--blue-primary) 0%, var(--purple) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 32px;
+    font-size: 1.75rem;
     font-weight: 700;
-    color: white;
-    margin-bottom: 12px;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    color: #000;
+    margin-bottom: 0.75rem;
   }
 
   .seller-info h3 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 22px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: var(--text-primary);
   }
@@ -1226,64 +1197,57 @@ const styles = `
   .seller-metrics {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    gap: 0.75rem;
   }
 
   .metric {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.625rem;
+    border: 1px solid var(--border);
   }
 
   .metric-label {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 600;
   }
 
   .metric-value {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 20px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: var(--text-primary);
   }
 
   .metric-revenue {
-    color: var(--accent-green);
-  }
-
-  /* ========== Transactions Section ========== */
-  .transactions-section {
-    margin-top: 40px;
+    color: var(--green-primary);
   }
 
   /* ========== Card Form ========== */
-  .card-form-container {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-    border: 2px solid rgba(251, 191, 36, 0.2);
-    border-radius: 16px;
-    padding: 32px;
-    animation: slideUp 0.5s ease;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  .card-form-wrapper {
+    background: var(--bg-card);
+    border: 2px solid rgba(34, 211, 238, 0.2);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
   }
 
   .card-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 1.5rem;
   }
 
-  .form-row {
+  .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    gap: 1.25rem;
   }
 
   .card-id-input {
@@ -1294,32 +1258,30 @@ const styles = `
 
   .card-prefix {
     position: absolute;
-    left: 16px;
+    left: 1rem;
     font-weight: 700;
-    color: var(--accent-yellow);
-    font-size: 15px;
+    color: var(--blue-primary);
+    font-size: 0.9375rem;
     pointer-events: none;
-    font-family: 'Rajdhani', sans-serif;
   }
 
   .card-id-input input {
-    padding-left: 48px !important;
+    padding-left: 3rem !important;
   }
 
   .form-actions {
     display: flex;
     justify-content: flex-end;
-    padding-top: 8px;
+    padding-top: 0.5rem;
   }
 
   /* ========== Table ========== */
   .table-container {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 1rem;
     overflow: hidden;
-    animation: slideUp 0.5s ease;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
   }
 
   .table-wrapper {
@@ -1332,28 +1294,26 @@ const styles = `
   }
 
   .data-table thead {
-    background: rgba(251, 191, 36, 0.1);
-    border-bottom: 2px solid rgba(251, 191, 36, 0.2);
+    background: rgba(34, 211, 238, 0.1);
   }
 
   .data-table th {
-    padding: 18px 20px;
+    padding: 1rem 1.25rem;
     text-align: left;
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
-    color: var(--accent-yellow);
+    color: var(--blue-primary);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.5px;
   }
 
   .data-table tbody tr {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s ease;
   }
 
   .data-table tbody tr:hover {
-    background: rgba(251, 191, 36, 0.05);
+    background: rgba(34, 211, 238, 0.05);
   }
 
   .data-table tbody tr:last-child {
@@ -1361,76 +1321,74 @@ const styles = `
   }
 
   .data-table td {
-    padding: 16px 20px;
-    font-size: 14px;
+    padding: 1rem 1.25rem;
+    font-size: 0.875rem;
     color: var(--text-primary);
   }
 
   .card-id-badge {
     display: inline-block;
-    padding: 6px 14px;
-    background: rgba(251, 191, 36, 0.15);
-    border: 2px solid rgba(251, 191, 36, 0.3);
-    color: var(--accent-yellow);
-    border-radius: 8px;
+    padding: 0.375rem 0.875rem;
+    background: rgba(34, 211, 238, 0.15);
+    border: 2px solid rgba(34, 211, 238, 0.3);
+    color: var(--blue-primary);
+    border-radius: 0.5rem;
     font-weight: 700;
-    font-size: 13px;
-    font-family: 'Rajdhani', monospace;
+    font-size: 0.8125rem;
+    font-family: monospace;
     letter-spacing: 1px;
   }
 
   .seller-cell {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
     color: var(--text-secondary);
   }
 
   .amount-cell {
     font-weight: 700;
-    font-family: 'Rajdhani', sans-serif;
-    color: var(--accent-green);
-    font-size: 16px;
+    color: var(--green-primary);
+    font-size: 1rem;
   }
 
   .payment-badge {
     display: inline-block;
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-size: 11px;
+    padding: 0.375rem 0.875rem;
+    border-radius: 0.5rem;
+    font-size: 0.6875rem;
     font-weight: 700;
     text-transform: uppercase;
-    font-family: 'Rajdhani', sans-serif;
     letter-spacing: 0.5px;
   }
 
   .payment-badge.upi {
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--accent-green);
-    border: 2px solid rgba(16, 185, 129, 0.3);
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--green-primary);
+    border: 2px solid rgba(34, 197, 94, 0.3);
   }
 
   .payment-badge.cash {
     background: rgba(251, 191, 36, 0.15);
-    color: var(--accent-yellow);
+    color: var(--yellow);
     border: 2px solid rgba(251, 191, 36, 0.3);
   }
 
   .payment-badge.referred {
-    background: rgba(139, 92, 246, 0.15);
-    color: var(--accent-purple);
-    border: 2px solid rgba(139, 92, 246, 0.3);
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--purple);
+    border: 2px solid rgba(168, 85, 247, 0.3);
   }
 
   .date-cell {
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
 
   /* ========== Loading & Empty States ========== */
   .loading-state,
   .empty-state {
-    padding: 80px 20px;
+    padding: 4rem 1.25rem;
     text-align: center;
     color: var(--text-secondary);
   }
@@ -1439,14 +1397,14 @@ const styles = `
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 1rem;
   }
 
   .spinner {
     width: 48px;
     height: 48px;
     border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--accent-yellow);
+    border-top-color: var(--blue-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -1457,43 +1415,42 @@ const styles = `
 
   .empty-state svg {
     color: var(--text-muted);
-    margin-bottom: 16px;
+    margin-bottom: 1rem;
   }
 
   .empty-state h3 {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 8px;
-    font-family: 'Rajdhani', sans-serif;
+    margin-bottom: 0.5rem;
   }
 
   .empty-state p {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
-  /* ========== Toast Notifications ========== */
+  /* ========== Toast ========== */
   .toast-container {
     position: fixed;
-    top: 24px;
-    right: 24px;
+    top: 1.5rem;
+    right: 1.5rem;
     z-index: 1000;
   }
 
   .toast {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
     background: var(--bg-secondary);
-    border: 2px solid rgba(251, 191, 36, 0.3);
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(251, 191, 36, 0.2);
-    min-width: 320px;
-    animation: slideInRight 0.3s ease;
+    border: 2px solid rgba(34, 211, 238, 0.3);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow-lg);
+    min-width: 300px;
+    animation: slideIn 0.3s ease;
   }
 
-  @keyframes slideInRight {
+  @keyframes slideIn {
     from {
       opacity: 0;
       transform: translateX(100px);
@@ -1504,9 +1461,17 @@ const styles = `
     }
   }
 
+  .toast-icon.success {
+    color: var(--success);
+  }
+
+  .toast-icon.error {
+    color: var(--error);
+  }
+
   .toast span {
     flex: 1;
-    font-size: 14px;
+    font-size: 0.875rem;
     color: var(--text-primary);
   }
 
@@ -1514,7 +1479,7 @@ const styles = `
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    font-size: 24px;
+    font-size: 1.5rem;
     cursor: pointer;
     line-height: 1;
     padding: 0;
@@ -1527,53 +1492,61 @@ const styles = `
   }
 
   .toast-close:hover {
-    color: var(--accent-yellow);
+    color: var(--blue-primary);
   }
 
   /* ========== Responsive Design ========== */
-  @media (max-width: 968px) {
-    .seller-grid {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
-  }
-
   @media (max-width: 768px) {
-    .navbar {
-      padding: 0 20px;
-      height: auto;
-      flex-direction: column;
-      gap: 16px;
-      padding-top: 16px;
-      padding-bottom: 16px;
+    .mobile-menu-toggle {
+      display: block;
     }
 
     .navbar-menu {
-      width: 100%;
-      justify-content: space-between;
-      flex-wrap: wrap;
+      position: fixed;
+      top: 4.5rem;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-bottom: 2px solid rgba(34, 211, 238, 0.2);
+      flex-direction: column;
+      align-items: stretch;
+      padding: 1rem;
+      gap: 0.75rem;
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-md);
     }
 
+    .navbar-menu.mobile-open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .nav-link,
     .btn-logout {
-      margin-left: 0;
       width: 100%;
       justify-content: center;
+      margin-left: 0;
     }
 
     .main-content {
-      padding: 20px;
+      padding: 1.5rem 1rem;
     }
 
     .page-header {
       flex-direction: column;
-      gap: 16px;
+      align-items: stretch;
     }
 
     .page-header h1 {
-      font-size: 28px;
+      font-size: 1.75rem;
     }
 
     .login-box {
-      padding: 32px 24px;
+      padding: 2rem 1.5rem;
     }
 
     .stats-grid {
@@ -1584,22 +1557,26 @@ const styles = `
       grid-template-columns: 1fr;
     }
 
-    .form-row {
+    .form-grid {
       grid-template-columns: 1fr;
     }
 
-    .table-wrapper {
-      overflow-x: scroll;
+    .card-form-wrapper {
+      padding: 1.5rem;
     }
 
-    .data-table {
-      min-width: 700px;
+    .form-actions {
+      justify-content: stretch;
+    }
+
+    .form-actions .btn-primary {
+      width: 100%;
     }
 
     .toast-container {
-      left: 16px;
-      right: 16px;
-      top: 16px;
+      left: 1rem;
+      right: 1rem;
+      top: 1rem;
     }
 
     .toast {
@@ -1610,38 +1587,38 @@ const styles = `
     .seller-metrics {
       grid-template-columns: 1fr;
     }
+
+    .stat-value {
+      font-size: 1.5rem;
+    }
   }
 
   @media (max-width: 480px) {
-    .page-header h1 {
-      font-size: 24px;
-    }
-
     .navbar-brand {
-      font-size: 20px;
+      font-size: 1.25rem;
     }
 
-    .stat-value {
-      font-size: 28px;
+    .page-header h1 {
+      font-size: 1.5rem;
     }
 
-    .card-form-container {
-      padding: 24px 16px;
+    .login-logo h1 {
+      font-size: 1.75rem;
     }
 
-    .login-icon {
-      width: 64px;
-      height: 64px;
-    }
-
-    .login-header h1 {
-      font-size: 26px;
+    .logo-icon {
+      width: 50px;
+      height: 50px;
     }
 
     .seller-avatar {
-      width: 64px;
-      height: 64px;
-      font-size: 28px;
+      width: 56px;
+      height: 56px;
+      font-size: 1.5rem;
+    }
+
+    .section-title h2 {
+      font-size: 1.25rem;
     }
   }
 `;
