@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle2, LogOut, CreditCard, TrendingUp, DollarSign, User } from 'lucide-react';
+import { AlertCircle, CheckCircle2, LogOut, CreditCard, TrendingUp, DollarSign, User, Users, BarChart3 } from 'lucide-react';
 
 // ============================================================================
 // API Configuration & Utilities
@@ -161,8 +161,8 @@ const UpdateCardPage = ({ token, onShowToast }) => {
   const [loading, setLoading] = useState(false);
 
   const sellerNames = ['Sahith', 'Pandu', 'Bharath', 'Manoj', 'Anand','Ratnakar','Yagnesh','Pavan'];
-  const gameOptions = [1, 2 ];
-  const amountOptions = [0, 39, 49, 69, 79 , 40 , 50 , 70 , 80];
+  const gameOptions = [1, 2];
+  const amountOptions = [0, 39, 49, 69, 79, 40, 50, 70, 80];
   const paymentTypes = ['UPI', 'CASH', 'REFERRED'];
 
   const handleSubmit = async (e) => {
@@ -316,11 +316,12 @@ const DashboardPage = ({ token, onShowToast }) => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-  totalCards: 0,
-  soldCards: 0,
-  totalRevenue: 0,
-  totalGames: 0
-});
+    totalCards: 0,
+    soldCards: 0,
+    totalRevenue: 0,
+    totalGames: 0
+  });
+  const [sellerStats, setSellerStats] = useState([]);
 
   useEffect(() => {
     fetchCards();
@@ -331,19 +332,40 @@ const DashboardPage = ({ token, onShowToast }) => {
       const data = await api.getCards(token);
       setCards(data);
       
-      // Calculate stats
+      // Calculate overall stats
       const totalRevenue = data.reduce((sum, card) => sum + (card.amount || 0), 0);
-const totalGames = data.reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
-const soldCards = data.filter(
-  card => card.sellerName && card.sellerName !== "NOT_SOLD"
-).length;
+      const totalGames = data.reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
+      const soldCards = data.filter(
+        card => card.sellerName && card.sellerName !== "NOT_SOLD"
+      ).length;
 
-setStats({
-  totalCards: data.length,
-  soldCards,
-  totalRevenue,
-  totalGames
-});
+      setStats({
+        totalCards: data.length,
+        soldCards,
+        totalRevenue,
+        totalGames
+      });
+
+      // Calculate seller-wise stats
+      const sellerMap = {};
+      data.forEach(card => {
+        if (card.sellerName && card.sellerName !== "NOT_SOLD") {
+          if (!sellerMap[card.sellerName]) {
+            sellerMap[card.sellerName] = {
+              name: card.sellerName,
+              cardsSold: 0,
+              revenue: 0,
+              games: 0
+            };
+          }
+          sellerMap[card.sellerName].cardsSold += 1;
+          sellerMap[card.sellerName].revenue += card.amount || 0;
+          sellerMap[card.sellerName].games += card.numberOfGames || 0;
+        }
+      });
+
+      const sellerArray = Object.values(sellerMap).sort((a, b) => b.revenue - a.revenue);
+      setSellerStats(sellerArray);
 
     } catch (err) {
       onShowToast('Failed to load dashboard data', 'error');
@@ -376,7 +398,7 @@ setStats({
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
             <CreditCard size={24} />
           </div>
           <div className="stat-content">
@@ -386,7 +408,7 @@ setStats({
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
             <DollarSign size={24} />
           </div>
           <div className="stat-content">
@@ -396,7 +418,7 @@ setStats({
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
             <TrendingUp size={24} />
           </div>
           <div className="stat-content">
@@ -406,72 +428,130 @@ setStats({
         </div>
 
         <div className="stat-card">
-  <div
-    className="stat-icon"
-    style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
-  >
-    <CreditCard size={24} />
-  </div>
-  <div className="stat-content">
-    <p className="stat-label">Cards Sold</p>
-    <p className="stat-value">{stats.soldCards}</p>
-  </div>
-</div>
+          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
+            <CheckCircle2 size={24} />
+          </div>
+          <div className="stat-content">
+            <p className="stat-label">Cards Sold</p>
+            <p className="stat-value">{stats.soldCards}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="table-container">
+      {/* Seller-wise Statistics */}
+      <div className="seller-stats-section">
+        <div className="section-header">
+          <div className="section-title">
+            <Users size={24} />
+            <h2>Seller Performance</h2>
+          </div>
+        </div>
+
         {loading ? (
           <div className="loading-state">
             <div className="spinner"></div>
-            <p>Loading cards...</p>
+            <p>Loading seller stats...</p>
           </div>
-        ) : cards.length === 0 ? (
+        ) : sellerStats.length === 0 ? (
           <div className="empty-state">
-            <CreditCard size={48} />
-            <h3>No cards found</h3>
-            <p>Start by updating your first card</p>
+            <Users size={48} />
+            <h3>No seller data available</h3>
+            <p>Start updating cards to see seller statistics</p>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Card ID</th>
-                  <th>Seller Name</th>
-                  <th>Games</th>
-                  <th>Amount</th>
-                  <th>Payment Type</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cards.map((card, index) => (
-                  <tr key={card.cardId || index}>
-                    <td>
-                      <span className="card-id-badge">{card.cardId}</span>
-                    </td>
-                    <td>
-                      <div className="seller-cell">
-                        <User size={16} />
-                        <span>{card.sellerName}</span>
-                      </div>
-                    </td>
-                    <td>{card.numberOfGames}</td>
-                    <td>
-                      <span className="amount-cell">₹{card.amount}</span>
-                    </td>
-                    <td>
-                      <span className={`payment-badge ${card.paymentType?.toLowerCase()}`}>
-                        {card.paymentType}
-                      </span>
-                    </td>
-                    <td className="date-cell">{formatDate(card.date)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="seller-grid">
+            {sellerStats.map((seller, index) => (
+              <div key={seller.name} className="seller-card">
+                <div className="seller-rank">#{index + 1}</div>
+                <div className="seller-info">
+                  <div className="seller-avatar">
+                    {seller.name.charAt(0)}
+                  </div>
+                  <h3>{seller.name}</h3>
+                </div>
+                <div className="seller-metrics">
+                  <div className="metric">
+                    <span className="metric-label">Cards Sold</span>
+                    <span className="metric-value">{seller.cardsSold}</span>
+                  </div>
+                  <div className="metric">
+                    <span className="metric-label">Revenue</span>
+                    <span className="metric-value metric-revenue">₹{seller.revenue}</span>
+                  </div>
+                  <div className="metric">
+                    <span className="metric-label">Games</span>
+                    <span className="metric-value">{seller.games}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
+      </div>
+
+      {/* Recent Transactions Table */}
+      <div className="transactions-section">
+        <div className="section-header">
+          <div className="section-title">
+            <BarChart3 size={24} />
+            <h2>Recent Transactions</h2>
+          </div>
+        </div>
+
+        <div className="table-container">
+          {loading ? (
+            <div className="loading-state">
+              <div className="spinner"></div>
+              <p>Loading cards...</p>
+            </div>
+          ) : cards.length === 0 ? (
+            <div className="empty-state">
+              <CreditCard size={48} />
+              <h3>No cards found</h3>
+              <p>Start by updating your first card</p>
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Card ID</th>
+                    <th>Seller Name</th>
+                    <th>Games</th>
+                    <th>Amount</th>
+                    <th>Payment Type</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cards.map((card, index) => (
+                    <tr key={card.cardId || index}>
+                      <td>
+                        <span className="card-id-badge">{card.cardId}</span>
+                      </td>
+                      <td>
+                        <div className="seller-cell">
+                          <User size={16} />
+                          <span>{card.sellerName}</span>
+                        </div>
+                      </td>
+                      <td>{card.numberOfGames}</td>
+                      <td>
+                        <span className="amount-cell">₹{card.amount}</span>
+                      </td>
+                      <td>
+                        <span className={`payment-badge ${card.paymentType?.toLowerCase()}`}>
+                          {card.paymentType}
+                        </span>
+                      </td>
+                      <td className="date-cell">{formatDate(card.date)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -570,11 +650,11 @@ const App = () => {
 };
 
 // ============================================================================
-// Styles
+// Styles - Updated with Vibrant Gaming Theme
 // ============================================================================
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&family=Lexend:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap');
 
   * {
     margin: 0;
@@ -583,22 +663,25 @@ const styles = `
   }
 
   :root {
-    --bg-primary: #0a0a0f;
-    --bg-secondary: #13131a;
-    --bg-tertiary: #1a1a24;
-    --text-primary: #f5f5f7;
-    --text-secondary: #a1a1aa;
-    --text-muted: #71717a;
-    --border: #27272f;
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
+    --bg-primary: #0f1419;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #242938;
+    --text-primary: #ffffff;
+    --text-secondary: #b4bcd0;
+    --text-muted: #6b7280;
+    --border: rgba(255, 255, 255, 0.1);
+    --accent-yellow: #fbbf24;
+    --accent-green: #10b981;
+    --accent-blue: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f59e0b;
     --success: #10b981;
     --error: #ef4444;
-    --shadow: rgba(0, 0, 0, 0.4);
+    --shadow: rgba(0, 0, 0, 0.5);
   }
 
   body {
-    font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -614,19 +697,19 @@ const styles = `
     justify-content: center;
     padding: 20px;
     background: 
-      radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 20% 20%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
       var(--bg-primary);
   }
 
   .login-box {
     background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 24px;
+    border: 2px solid rgba(251, 191, 36, 0.2);
+    border-radius: 20px;
     padding: 48px;
     width: 100%;
     max-width: 440px;
-    box-shadow: 0 20px 60px var(--shadow);
+    box-shadow: 0 20px 60px var(--shadow), 0 0 100px rgba(251, 191, 36, 0.1);
     animation: fadeInUp 0.6s ease-out;
   }
 
@@ -647,16 +730,17 @@ const styles = `
   }
 
   .login-icon {
-    width: 64px;
-    height: 64px;
+    width: 80px;
+    height: 80px;
     margin: 0 auto 20px;
-    background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
-    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     animation: float 3s ease-in-out infinite;
+    box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
   }
 
   @keyframes float {
@@ -665,14 +749,15 @@ const styles = `
   }
 
   .login-header h1 {
-    font-family: 'Lexend', sans-serif;
-    font-size: 28px;
-    font-weight: 600;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
     margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    letter-spacing: 1px;
   }
 
   .login-header p {
@@ -694,7 +779,7 @@ const styles = `
 
   .form-group label {
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-secondary);
   }
 
@@ -702,19 +787,20 @@ const styles = `
   .form-group select {
     padding: 14px 16px;
     background: var(--bg-tertiary);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     border-radius: 12px;
     color: var(--text-primary);
     font-size: 15px;
     font-family: inherit;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
   }
 
   .form-group input:focus,
   .form-group select:focus {
     outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1);
+    background: var(--bg-secondary);
   }
 
   .form-group input:disabled,
@@ -729,7 +815,7 @@ const styles = `
     gap: 8px;
     padding: 12px 16px;
     background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    border: 2px solid rgba(239, 68, 68, 0.3);
     border-radius: 10px;
     color: var(--error);
     font-size: 14px;
@@ -743,21 +829,24 @@ const styles = `
   }
 
   .btn-primary {
-    padding: 14px 24px;
-    background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%);
-    color: white;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+    color: #000;
     border: none;
     border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
+    transition: all 0.3s ease;
+    font-family: 'Rajdhani', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
   }
 
   .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4);
   }
 
   .btn-primary:active:not(:disabled) {
@@ -777,15 +866,15 @@ const styles = `
 
   .login-decoration {
     height: 4px;
-    background: linear-gradient(90deg, var(--accent), #8b5cf6, var(--accent));
+    background: linear-gradient(90deg, var(--accent-yellow), var(--accent-green), var(--accent-blue), var(--accent-purple), var(--accent-yellow));
     border-radius: 4px;
-    animation: shimmer 2s ease-in-out infinite;
-    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+    background-size: 300% 100%;
   }
 
   @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0% { background-position: 0% 0; }
+    100% { background-position: 300% 0; }
   }
 
   /* ========== App Layout ========== */
@@ -796,31 +885,33 @@ const styles = `
   }
 
   .navbar {
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, #1f2533 100%);
+    border-bottom: 2px solid rgba(251, 191, 36, 0.2);
     padding: 0 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 72px;
+    height: 80px;
     position: sticky;
     top: 0;
     z-index: 100;
     backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   }
 
   .navbar-brand {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-family: 'Lexend', sans-serif;
-    font-size: 20px;
-    font-weight: 600;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
     color: var(--text-primary);
+    letter-spacing: 1px;
   }
 
   .navbar-brand svg {
-    color: var(--accent);
+    color: var(--accent-yellow);
   }
 
   .navbar-menu {
@@ -830,55 +921,59 @@ const styles = `
   }
 
   .nav-link {
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: transparent;
     border: none;
     color: var(--text-secondary);
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     border-radius: 10px;
-    transition: all 0.2s ease;
-    font-family: inherit;
+    transition: all 0.3s ease;
+    font-family: 'Rajdhani', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .nav-link:hover {
-    color: var(--text-primary);
-    background: var(--bg-tertiary);
+    color: var(--accent-yellow);
+    background: rgba(251, 191, 36, 0.1);
   }
 
   .nav-link.active {
-    color: var(--accent);
-    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-yellow);
+    background: rgba(251, 191, 36, 0.15);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
   }
 
   .btn-logout {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: transparent;
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     color: var(--text-secondary);
     border-radius: 10px;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     margin-left: 16px;
-    font-family: inherit;
+    font-family: 'Rajdhani', sans-serif;
+    text-transform: uppercase;
   }
 
   .btn-logout:hover {
     border-color: var(--error);
     color: var(--error);
-    background: rgba(239, 68, 68, 0.05);
+    background: rgba(239, 68, 68, 0.1);
   }
 
   .main-content {
     flex: 1;
     padding: 32px;
-    max-width: 1400px;
+    max-width: 1600px;
     width: 100%;
     margin: 0 auto;
   }
@@ -901,10 +996,14 @@ const styles = `
   }
 
   .page-header h1 {
-    font-family: 'Lexend', sans-serif;
-    font-size: 32px;
-    font-weight: 600;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
     margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .page-header p {
@@ -915,19 +1014,21 @@ const styles = `
   .btn-secondary {
     padding: 12px 24px;
     background: var(--bg-tertiary);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     color: var(--text-primary);
     border-radius: 10px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
+    transition: all 0.3s ease;
+    font-family: 'Rajdhani', sans-serif;
+    text-transform: uppercase;
   }
 
   .btn-secondary:hover:not(:disabled) {
     background: var(--bg-secondary);
-    border-color: var(--accent);
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
   }
 
   .btn-secondary:disabled {
@@ -940,12 +1041,12 @@ const styles = `
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
-    margin-bottom: 32px;
+    margin-bottom: 40px;
   }
 
   .stat-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 24px;
     display: flex;
@@ -953,6 +1054,18 @@ const styles = `
     gap: 20px;
     transition: all 0.3s ease;
     animation: slideUp 0.5s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-yellow), var(--accent-green), var(--accent-blue));
   }
 
   @keyframes slideUp {
@@ -968,18 +1081,20 @@ const styles = `
 
   .stat-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px var(--shadow);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.3);
   }
 
   .stat-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   }
 
   .stat-content {
@@ -987,25 +1102,176 @@ const styles = `
   }
 
   .stat-label {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-secondary);
     margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
   }
 
   .stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-primary);
+  }
+
+  /* ========== Seller Stats Section ========== */
+  .seller-stats-section {
+    margin-bottom: 40px;
+  }
+
+  .section-header {
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title svg {
+    color: var(--accent-yellow);
+  }
+
+  .section-title h2 {
+    font-family: 'Rajdhani', sans-serif;
     font-size: 28px;
     font-weight: 700;
-    font-family: 'Lexend', sans-serif;
     color: var(--text-primary);
+  }
+
+  .seller-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .seller-card {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .seller-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue));
+  }
+
+  .seller-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+
+  .seller-rank {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-orange) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+  }
+
+  .seller-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .seller-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+  }
+
+  .seller-info h3 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .seller-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .metric-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .metric-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .metric-revenue {
+    color: var(--accent-green);
+  }
+
+  /* ========== Transactions Section ========== */
+  .transactions-section {
+    margin-top: 40px;
   }
 
   /* ========== Card Form ========== */
   .card-form-container {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 2px solid rgba(251, 191, 36, 0.2);
     border-radius: 16px;
     padding: 32px;
     animation: slideUp 0.5s ease;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   }
 
   .card-form {
@@ -1029,10 +1295,11 @@ const styles = `
   .card-prefix {
     position: absolute;
     left: 16px;
-    font-weight: 600;
-    color: var(--accent);
+    font-weight: 700;
+    color: var(--accent-yellow);
     font-size: 15px;
     pointer-events: none;
+    font-family: 'Rajdhani', sans-serif;
   }
 
   .card-id-input input {
@@ -1047,11 +1314,12 @@ const styles = `
 
   /* ========== Table ========== */
   .table-container {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     overflow: hidden;
     animation: slideUp 0.5s ease;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
   }
 
   .table-wrapper {
@@ -1064,27 +1332,28 @@ const styles = `
   }
 
   .data-table thead {
-    background: var(--bg-tertiary);
-    border-bottom: 1px solid var(--border);
+    background: rgba(251, 191, 36, 0.1);
+    border-bottom: 2px solid rgba(251, 191, 36, 0.2);
   }
 
   .data-table th {
-    padding: 16px 20px;
+    padding: 18px 20px;
     text-align: left;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-yellow);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
+    font-family: 'Rajdhani', sans-serif;
   }
 
   .data-table tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
   }
 
   .data-table tbody tr:hover {
-    background: var(--bg-tertiary);
+    background: rgba(251, 191, 36, 0.05);
   }
 
   .data-table tbody tr:last-child {
@@ -1099,14 +1368,15 @@ const styles = `
 
   .card-id-badge {
     display: inline-block;
-    padding: 6px 12px;
-    background: rgba(99, 102, 241, 0.15);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    color: var(--accent);
+    padding: 6px 14px;
+    background: rgba(251, 191, 36, 0.15);
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    color: var(--accent-yellow);
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 13px;
-    font-family: 'Lexend', monospace;
+    font-family: 'Rajdhani', monospace;
+    letter-spacing: 1px;
   }
 
   .seller-cell {
@@ -1117,36 +1387,39 @@ const styles = `
   }
 
   .amount-cell {
-    font-weight: 600;
-    font-family: 'Lexend', sans-serif;
-    color: var(--success);
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--accent-green);
+    font-size: 16px;
   }
 
   .payment-badge {
     display: inline-block;
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.5px;
   }
 
   .payment-badge.upi {
     background: rgba(16, 185, 129, 0.15);
-    color: var(--success);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--accent-green);
+    border: 2px solid rgba(16, 185, 129, 0.3);
   }
 
   .payment-badge.cash {
     background: rgba(251, 191, 36, 0.15);
-    color: #fbbf24;
-    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: var(--accent-yellow);
+    border: 2px solid rgba(251, 191, 36, 0.3);
   }
 
   .payment-badge.referred {
     background: rgba(139, 92, 246, 0.15);
-    color: #8b5cf6;
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: var(--accent-purple);
+    border: 2px solid rgba(139, 92, 246, 0.3);
   }
 
   .date-cell {
@@ -1172,8 +1445,8 @@ const styles = `
   .spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid var(--border);
-    border-top-color: var(--accent);
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent-yellow);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -1189,9 +1462,10 @@ const styles = `
 
   .empty-state h3 {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 8px;
+    font-family: 'Rajdhani', sans-serif;
   }
 
   .empty-state p {
@@ -1212,9 +1486,9 @@ const styles = `
     gap: 12px;
     padding: 16px 20px;
     background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    border: 2px solid rgba(251, 191, 36, 0.3);
     border-radius: 12px;
-    box-shadow: 0 20px 60px var(--shadow);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(251, 191, 36, 0.2);
     min-width: 320px;
     animation: slideInRight 0.3s ease;
   }
@@ -1253,10 +1527,16 @@ const styles = `
   }
 
   .toast-close:hover {
-    color: var(--text-primary);
+    color: var(--accent-yellow);
   }
 
   /* ========== Responsive Design ========== */
+  @media (max-width: 968px) {
+    .seller-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+  }
+
   @media (max-width: 768px) {
     .navbar {
       padding: 0 20px;
@@ -1270,10 +1550,13 @@ const styles = `
     .navbar-menu {
       width: 100%;
       justify-content: space-between;
+      flex-wrap: wrap;
     }
 
     .btn-logout {
       margin-left: 0;
+      width: 100%;
+      justify-content: center;
     }
 
     .main-content {
@@ -1285,11 +1568,19 @@ const styles = `
       gap: 16px;
     }
 
+    .page-header h1 {
+      font-size: 28px;
+    }
+
     .login-box {
       padding: 32px 24px;
     }
 
     .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .seller-grid {
       grid-template-columns: 1fr;
     }
 
@@ -1315,6 +1606,10 @@ const styles = `
       min-width: auto;
       width: 100%;
     }
+
+    .seller-metrics {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 480px) {
@@ -1323,15 +1618,30 @@ const styles = `
     }
 
     .navbar-brand {
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .stat-value {
-      font-size: 24px;
+      font-size: 28px;
     }
 
     .card-form-container {
       padding: 24px 16px;
+    }
+
+    .login-icon {
+      width: 64px;
+      height: 64px;
+    }
+
+    .login-header h1 {
+      font-size: 26px;
+    }
+
+    .seller-avatar {
+      width: 64px;
+      height: 64px;
+      font-size: 28px;
     }
   }
 `;
