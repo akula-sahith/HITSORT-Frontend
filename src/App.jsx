@@ -507,7 +507,7 @@ const DashboardPage = ({ token, onShowToast }) => {
         <div className="section-header">
           <div className="section-title">
             <Users size={24} />
-            <h2>Seller Performance</h2>
+            <h2>Individual Amounts</h2>
           </div>
         </div>
 
@@ -526,7 +526,7 @@ const DashboardPage = ({ token, onShowToast }) => {
           <div className="seller-grid">
             {sellerStats.map((seller, index) => (
               <div key={seller.name} className="seller-card">
-                <div className="seller-rank">#{index + 1}</div>
+                {/*<div className="seller-rank">#{index + 1}</div>*/}
                 <div className="seller-info">
                   <div className="seller-avatar">
                     {seller.name.charAt(0)}
