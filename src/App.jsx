@@ -314,12 +314,12 @@ const DashboardPage = ({ token, onShowToast }) => {
   const [loading, setLoading] = useState(true);
   // Fixed submitted amounts
 const submittedAmounts = {
-  Manoj: 2202,
+  Manoj: 1760,
   Bharath: 1684,
-  Anand: 1284,
+  Anand: 800,
   Sahith: 1218,
-  Pavan: 789,
-  Pandu: 677,
+  Pavan: 780,
+  Pandu: 660,
   Ratnakar: 376,
   Yagnesh: 49
 };
