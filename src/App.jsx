@@ -319,8 +319,8 @@ const submittedAmounts = {
   Anand: 800,
   Sahith: 1218,
   Pavan: 780,
-  Pandu: 660,
-  Ratnakar: 376,
+  Pandu: 710,
+  Ratnakar: 426,
   Yagnesh: 49
 };
 
