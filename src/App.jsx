@@ -517,7 +517,7 @@ const DashboardPage = ({ token, onShowToast }) => {
   Bharath: 2361,
   Sahith: 1457,
   Pavan: 1309,
-  Pandu: 717,
+  Pandu: 766,
   Ratnakar: 1140,
   Yagnesh: 49
 };
