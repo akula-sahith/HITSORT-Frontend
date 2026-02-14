@@ -510,6 +510,18 @@ const UpdateCardPage = ({ token, onShowToast }) => {
 // ============================================================================
 
 const DashboardPage = ({ token, onShowToast }) => {
+
+  const submittedAmounts = {
+  Anand: 800,
+  Manoj: 1760,
+  Bharath: 1684,
+  Sahith: 1218,
+  Pavan: 780,
+  Pandu: 660,
+  Ratnakar: 376,
+  Yagnesh: 49
+};
+
   const [cards, setCards] = useState([]);
   const [expenditures, setExpenditures] = useState([]);
   const [loading, setLoading] = useState(true);
