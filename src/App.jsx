@@ -1,43 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle2, LogOut, CreditCard, TrendingUp, DollarSign, User, Users, BarChart3, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  LogOut,
+  CreditCard,
+  TrendingUp,
+  DollarSign,
+  User,
+  Users,
+  BarChart3,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ShoppingCart,
+} from "lucide-react";
 
 // ============================================================================
 // API Configuration & Utilities
 // ============================================================================
 
-const API_BASE_URL = 'https://hitsort-backend.onrender.com';
+const API_BASE_URL = "https://hitsort-backend.onrender.com";
 
 const api = {
   login: async (username, password) => {
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
     });
-    if (!response.ok) throw new Error('Login failed');
+    if (!response.ok) throw new Error("Login failed");
     return response.json();
   },
-  
+
   getCards: async (token) => {
     const response = await fetch(`${API_BASE_URL}/api/cards`, {
-      headers: { 'Authorization': token }
+      headers: { Authorization: token },
     });
-    if (!response.ok) throw new Error('Failed to fetch cards');
+    if (!response.ok) throw new Error("Failed to fetch cards");
     return response.json();
   },
-  
+
   updateCard: async (token, data) => {
     const response = await fetch(`${API_BASE_URL}/api/cards/update`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Authorization': token,
-        'Content-Type': 'application/json'
+        Authorization: token,
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Failed to update card');
+    if (!response.ok) throw new Error("Failed to update card");
     return response.json();
-  }
+  },
+
+  getExpenditures: async (token) => {
+    const response = await fetch(`${API_BASE_URL}/api/expenditures/`, {
+      headers: { Authorization: token },
+    });
+    if (!response.ok) throw new Error("Failed to fetch cards");
+    return response.json();
+  },
+
+  updateExpenditure: async (token, data) => {
+    const response = await fetch(`${API_BASE_URL}/api/expenditures/update`, {
+      method: "PUT",
+      headers: {
+        Authorization: token,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to update expenditure");
+    return response.json();
+  },
 };
 
 // ============================================================================
@@ -52,13 +88,15 @@ const Toast = ({ message, type, onClose }) => {
 
   return (
     <div className="toast">
-      {type === 'success' ? (
+      {type === "success" ? (
         <CheckCircle2 size={20} className="toast-icon success" />
       ) : (
         <AlertCircle size={20} className="toast-icon error" />
       )}
       <span>{message}</span>
-      <button onClick={onClose} className="toast-close">×</button>
+      <button onClick={onClose} className="toast-close">
+        ×
+      </button>
     </div>
   );
 };
@@ -68,22 +106,22 @@ const Toast = ({ message, type, onClose }) => {
 // ============================================================================
 
 const LoginPage = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       const response = await api.login(username, password);
-      localStorage.setItem('authToken', response.token);
+      localStorage.setItem("authToken", response.token);
       onLogin(response.token);
     } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      setError("Invalid credentials. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -138,7 +176,7 @@ const LoginPage = ({ onLogin }) => {
           )}
 
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
       </div>
@@ -150,20 +188,25 @@ const LoginPage = ({ onLogin }) => {
 // Update Card Page Component
 // ============================================================================
 
-const UpdateCardPage = ({ token, onShowToast }) => {
+const UpdateExpenditurePage = ({ token, onShowToast }) => {
   const [formData, setFormData] = useState({
-    cardId: '',
-    sellerName: '',
-    numberOfGames: '',
-    amount: '',
-    paymentType: ''
+    usedFor: "",
+    amount: "",
+    usedBy: "",
   });
   const [loading, setLoading] = useState(false);
 
-  const sellerNames = ['Sahith', 'Pandu', 'Bharath', 'Manoj', 'Anand', 'Ratnakar', 'Yagnesh', 'Pavan'];
-  const gameOptions = [1, 2];
-  const amountOptions = [0, 39, 49, 69, 79, 40, 50, 70, 80];
-  const paymentTypes = ['UPI', 'CASH', 'REFERRED'];
+  const usedForTypes = ["Stall", "Cashback", "Prize", "Items" , "Cards"];
+  const usedByTypes = [
+    "Sahith",
+    "Pandu",
+    "Bharath",
+    "Manoj",
+    "Anand",
+    "Ratnakar",
+    "Yagnesh",
+    "Pavan",
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -171,25 +214,162 @@ const UpdateCardPage = ({ token, onShowToast }) => {
 
     try {
       const payload = {
-        cardId: `HS${formData.cardId.padStart(2, '0')}`,
+        usedFor: formData.usedFor,
+        amount: parseInt(formData.amount),
+        usedBy: formData.usedBy,
+      };
+
+      await api.updateExpenditure(token, payload);
+      onShowToast("Expenditure updated successfully!", "success");
+
+      setFormData({
+        usedFor: "",
+        amount: "",
+        usedBy: "",
+      });
+    } catch (err) {
+      onShowToast("Failed to update Expenditure. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="page-container">
+      <div className="page-header">
+        <div>
+          <h1>Update Expenditure</h1>
+          <p>Manage Expenditures of the Gaming Stall</p>
+        </div>
+      </div>
+
+      <div className="card-form-wrapper">
+        <form onSubmit={handleSubmit} className="card-form">
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="usedFor">Used For</label>
+              <select
+                id="usedFor"
+                value={formData.usedFor}
+                onChange={(e) =>
+                  setFormData({ ...formData, usedFor: e.target.value })
+                }
+                required
+                disabled={loading}
+              >
+                <option value="">Select Type</option>
+                {usedForTypes.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="amount">Amount Paid</label>
+              <input
+                id="amount"
+                type="text"
+                value={formData.amount}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  if (value.length <= 4) {
+                    setFormData({ ...formData, amount: value });
+                  }
+                }}
+                placeholder="00"
+                required
+                disabled={loading}
+                maxLength={4}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="usedBy">Used By</label>
+              <select
+                id="usedBy"
+                value={formData.usedBy}
+                onChange={(e) =>
+                  setFormData({ ...formData, usedBy: e.target.value })
+                }
+                required
+                disabled={loading}
+              >
+                <option value="">Select Person</option>
+                {usedByTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="submit"
+              className="btn-primary btn-large"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update Expenditure"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const UpdateCardPage = ({ token, onShowToast }) => {
+  const [formData, setFormData] = useState({
+    cardId: "",
+    sellerName: "",
+    numberOfGames: "",
+    amount: "",
+    paymentType: "",
+  });
+  const [loading, setLoading] = useState(false);
+
+  const sellerNames = [
+    "Sahith",
+    "Pandu",
+    "Bharath",
+    "Manoj",
+    "Anand",
+    "Ratnakar",
+    "Yagnesh",
+    "Pavan",
+  ];
+  const gameOptions = [1, 2];
+  const amountOptions = [0, 39, 49, 69, 79, 40, 50, 70, 80];
+  const paymentTypes = ["UPI", "CASH", "REFERRED"];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const payload = {
+        cardId: `HS${formData.cardId.padStart(2, "0")}`,
         sellerName: formData.sellerName,
         numberOfGames: parseInt(formData.numberOfGames),
         amount: parseInt(formData.amount),
-        paymentType: formData.paymentType
+        paymentType: formData.paymentType,
       };
 
       await api.updateCard(token, payload);
-      onShowToast('Card updated successfully!', 'success');
-      
+      onShowToast("Card updated successfully!", "success");
+
       setFormData({
-        cardId: '',
-        sellerName: '',
-        numberOfGames: '',
-        amount: '',
-        paymentType: ''
+        cardId: "",
+        sellerName: "",
+        numberOfGames: "",
+        amount: "",
+        paymentType: "",
       });
     } catch (err) {
-      onShowToast('Failed to update card. Please try again.', 'error');
+      onShowToast("Failed to update card. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -212,13 +392,17 @@ const UpdateCardPage = ({ token, onShowToast }) => {
               <select
                 id="sellerName"
                 value={formData.sellerName}
-                onChange={(e) => setFormData({ ...formData, sellerName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, sellerName: e.target.value })
+                }
                 required
                 disabled={loading}
               >
                 <option value="">Select seller</option>
-                {sellerNames.map(name => (
-                  <option key={name} value={name}>{name}</option>
+                {sellerNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -232,7 +416,7 @@ const UpdateCardPage = ({ token, onShowToast }) => {
                   type="text"
                   value={formData.cardId}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
+                    const value = e.target.value.replace(/\D/g, "");
                     if (value.length <= 4) {
                       setFormData({ ...formData, cardId: value });
                     }
@@ -250,13 +434,17 @@ const UpdateCardPage = ({ token, onShowToast }) => {
               <select
                 id="numberOfGames"
                 value={formData.numberOfGames}
-                onChange={(e) => setFormData({ ...formData, numberOfGames: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, numberOfGames: e.target.value })
+                }
                 required
                 disabled={loading}
               >
                 <option value="">Select games</option>
-                {gameOptions.map(num => (
-                  <option key={num} value={num}>{num} {num === 1 ? 'game' : 'games'}</option>
+                {gameOptions.map((num) => (
+                  <option key={num} value={num}>
+                    {num} {num === 1 ? "game" : "games"}
+                  </option>
                 ))}
               </select>
             </div>
@@ -266,13 +454,17 @@ const UpdateCardPage = ({ token, onShowToast }) => {
               <select
                 id="amount"
                 value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, amount: e.target.value })
+                }
                 required
                 disabled={loading}
               >
                 <option value="">Select amount</option>
-                {amountOptions.map(amt => (
-                  <option key={amt} value={amt}>₹{amt}</option>
+                {amountOptions.map((amt) => (
+                  <option key={amt} value={amt}>
+                    ₹{amt}
+                  </option>
                 ))}
               </select>
             </div>
@@ -282,21 +474,29 @@ const UpdateCardPage = ({ token, onShowToast }) => {
               <select
                 id="paymentType"
                 value={formData.paymentType}
-                onChange={(e) => setFormData({ ...formData, paymentType: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, paymentType: e.target.value })
+                }
                 required
                 disabled={loading}
               >
                 <option value="">Select type</option>
-                {paymentTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {paymentTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn-primary btn-large" disabled={loading}>
-              {loading ? 'Updating...' : 'Update Card'}
+            <button
+              type="submit"
+              className="btn-primary btn-large"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update Card"}
             </button>
           </div>
         </form>
@@ -311,19 +511,22 @@ const UpdateCardPage = ({ token, onShowToast }) => {
 
 const DashboardPage = ({ token, onShowToast }) => {
   const [cards, setCards] = useState([]);
+  const [expenditures, setExpenditures] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalCards: 0,
-    soldCards: 0,
-    totalRevenue: 0,
-    totalGames: 0
-  });
+ const [stats, setStats] = useState({
+  totalCards: 0,
+  soldCards: 0,
+  totalRevenue: 0,
+  totalGames: 0,
+  totalExpenditures: 0,  // ✅ plural
+});
   const [sellerStats, setSellerStats] = useState([]);
-  
+  const [expenditureStats, setExpenditureStats] = useState([]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterSeller, setFilterSeller] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterSeller, setFilterSeller] = useState("");
   const cardsPerPage = 50;
 
   useEffect(() => {
@@ -333,38 +536,54 @@ const DashboardPage = ({ token, onShowToast }) => {
   const fetchCards = async () => {
     try {
       const data = await api.getCards(token);
-      
+
       // Sort cards by card ID to ensure consistent display
       const sortedData = data.sort((a, b) => {
-        const numA = parseInt(a.cardId?.replace('HS', '') || '0');
-        const numB = parseInt(b.cardId?.replace('HS', '') || '0');
+        const numA = parseInt(a.cardId?.replace("HS", "") || "0");
+        const numB = parseInt(b.cardId?.replace("HS", "") || "0");
         return numA - numB;
       });
-      
+
       setCards(sortedData);
-      
-      const totalRevenue = sortedData.reduce((sum, card) => sum + (card.amount || 0), 0);
-      const totalGames = sortedData.reduce((sum, card) => sum + (card.numberOfGames || 0), 0);
+
+      const totalRevenue = sortedData.reduce(
+        (sum, card) => sum + (card.amount || 0),
+        0,
+      );
+      const totalGames = sortedData.reduce(
+        (sum, card) => sum + (card.numberOfGames || 0),
+        0,
+      );
       const soldCards = sortedData.filter(
-        card => card.sellerName && card.sellerName !== "NOT_SOLD"
+        (card) => card.sellerName && card.sellerName !== "NOT_SOLD",
       ).length;
+
+      const expendData = await api.getExpenditures(token);
+      setExpenditures(expendData);
+      
+      const totalExpenditures = expendData.reduce(
+        (sum, expenditure) => sum + (expenditure.amount || 0),
+        0,
+      );
 
       setStats({
         totalCards: sortedData.length,
         soldCards,
         totalRevenue,
-        totalGames
+        totalGames,
+        totalExpenditures,
       });
 
+      // Calculate seller stats
       const sellerMap = {};
-      sortedData.forEach(card => {
+      sortedData.forEach((card) => {
         if (card.sellerName && card.sellerName !== "NOT_SOLD") {
           if (!sellerMap[card.sellerName]) {
             sellerMap[card.sellerName] = {
               name: card.sellerName,
               cardsSold: 0,
               revenue: 0,
-              games: 0
+              games: 0,
             };
           }
           sellerMap[card.sellerName].cardsSold += 1;
@@ -373,34 +592,62 @@ const DashboardPage = ({ token, onShowToast }) => {
         }
       });
 
-      const sellerArray = Object.values(sellerMap).sort((a, b) => b.revenue - a.revenue);
+      const sellerArray = Object.values(sellerMap).sort(
+        (a, b) => b.revenue - a.revenue,
+      );
       setSellerStats(sellerArray);
 
+      // Calculate expenditure stats grouped by person
+      const expenditureMap = {};
+      expendData.forEach((exp) => {
+        if (exp.usedBy) {
+          if (!expenditureMap[exp.usedBy]) {
+            expenditureMap[exp.usedBy] = {
+              name: exp.usedBy,
+              totalAmount: 0,
+              items: [],
+            };
+          }
+          expenditureMap[exp.usedBy].totalAmount += exp.amount || 0;
+          expenditureMap[exp.usedBy].items.push({
+            usedFor: exp.usedFor,
+            amount: exp.amount,
+          });
+        }
+      });
+
+      const expenditureArray = Object.values(expenditureMap).sort(
+        (a, b) => b.totalAmount - a.totalAmount,
+      );
+      setExpenditureStats(expenditureArray);
+      
     } catch (err) {
-      onShowToast('Failed to load dashboard data', 'error');
+      onShowToast("Failed to load dashboard data", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
   };
 
   // Filter and search logic
-  const filteredCards = cards.filter(card => {
-    const matchesSearch = searchTerm === '' || 
+  const filteredCards = cards.filter((card) => {
+    const matchesSearch =
+      searchTerm === "" ||
       card.cardId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.sellerName?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSeller = filterSeller === '' || card.sellerName === filterSeller;
-    
+
+    const matchesSeller =
+      filterSeller === "" || card.sellerName === filterSeller;
+
     return matchesSearch && matchesSeller;
   });
 
@@ -411,17 +658,24 @@ const DashboardPage = ({ token, onShowToast }) => {
   const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
 
   // Get unique sellers for filter
-  const uniqueSellers = ['', ...new Set(cards.map(card => card.sellerName).filter(name => name && name !== 'NOT_SOLD'))];
+  const uniqueSellers = [
+    "",
+    ...new Set(
+      cards
+        .map((card) => card.sellerName)
+        .filter((name) => name && name !== "NOT_SOLD"),
+    ),
+  ];
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const getPageNumbers = () => {
     const pages = [];
     const maxPagesToShow = 5;
-    
+
     if (totalPages <= maxPagesToShow) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -429,23 +683,23 @@ const DashboardPage = ({ token, onShowToast }) => {
     } else {
       if (currentPage <= 3) {
         for (let i = 1; i <= 4; i++) pages.push(i);
-        pages.push('...');
+        pages.push("...");
         pages.push(totalPages);
       } else if (currentPage >= totalPages - 2) {
         pages.push(1);
-        pages.push('...');
+        pages.push("...");
         for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
       } else {
         pages.push(1);
-        pages.push('...');
+        pages.push("...");
         pages.push(currentPage - 1);
         pages.push(currentPage);
         pages.push(currentPage + 1);
-        pages.push('...');
+        pages.push("...");
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
@@ -456,8 +710,12 @@ const DashboardPage = ({ token, onShowToast }) => {
           <h1>Dashboard</h1>
           <p>Overview of all {stats.totalCards} cards</p>
         </div>
-        <button onClick={fetchCards} className="btn-secondary" disabled={loading}>
-          {loading ? 'Refreshing...' : 'Refresh'}
+        <button
+          onClick={fetchCards}
+          className="btn-secondary"
+          disabled={loading}
+        >
+          {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
@@ -483,6 +741,16 @@ const DashboardPage = ({ token, onShowToast }) => {
         </div>
 
         <div className="stat-card">
+          <div className="stat-icon red">
+            <DollarSign size={24} />
+          </div>
+          <div className="stat-content">
+            <p className="stat-label">Total Expenditure</p>
+            <p className="stat-value">₹{stats.totalExpenditures.toLocaleString()}</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
           <div className="stat-icon blue">
             <TrendingUp size={24} />
           </div>
@@ -502,7 +770,8 @@ const DashboardPage = ({ token, onShowToast }) => {
           </div>
         </div>
       </div>
-
+      
+      
       <div className="seller-stats-section">
         <div className="section-header">
           <div className="section-title">
@@ -526,11 +795,8 @@ const DashboardPage = ({ token, onShowToast }) => {
           <div className="seller-grid">
             {sellerStats.map((seller, index) => (
               <div key={seller.name} className="seller-card">
-                {/*<div className="seller-rank">#{index + 1}</div>*/}
                 <div className="seller-info">
-                  <div className="seller-avatar">
-                    {seller.name.charAt(0)}
-                  </div>
+                  <div className="seller-avatar">{seller.name.charAt(0)}</div>
                   <h3>{seller.name}</h3>
                 </div>
                 <div className="seller-metrics">
@@ -540,12 +806,60 @@ const DashboardPage = ({ token, onShowToast }) => {
                   </div>
                   <div className="metric">
                     <span className="metric-label">Revenue</span>
-                    <span className="metric-value metric-revenue">₹{seller.revenue}</span>
+                    <span className="metric-value metric-revenue">
+                      ₹{seller.revenue}
+                    </span>
                   </div>
                   <div className="metric">
                     <span className="metric-label">Games</span>
                     <span className="metric-value">{seller.games}</span>
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+
+      <div className="seller-stats-section">
+        <div className="section-header">
+          <div className="section-title">
+            <ShoppingCart size={24} />
+            <h2>Individual Expenditure</h2>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Loading Expenditures...</p>
+          </div>
+        ) : expenditureStats.length === 0 ? (
+          <div className="empty-state">
+            <ShoppingCart size={48} />
+            <h3>No expenditure data available</h3>
+            <p>Start updating expenditures to see statistics</p>
+          </div>
+        ) : (
+          <div className="seller-grid">
+            {expenditureStats.map((exp) => (
+              <div key={exp.name} className="seller-card expenditure-card">
+                <div className="seller-info">
+                  <div className="seller-avatar expenditure-avatar">{exp.name.charAt(0)}</div>
+                  <h3>{exp.name}</h3>
+                </div>
+                <div className="expenditure-total">
+                  <span className="expenditure-total-label">Total Spent</span>
+                  <span className="expenditure-total-amount">₹{exp.totalAmount}</span>
+                </div>
+                <div className="expenditure-items">
+                  {exp.items.map((item, idx) => (
+                    <div key={idx} className="expenditure-item">
+                      <span className="expenditure-item-name">{item.usedFor}</span>
+                      <span className="expenditure-item-amount">₹{item.amount}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -584,8 +898,10 @@ const DashboardPage = ({ token, onShowToast }) => {
               className="filter-select"
             >
               <option value="">All Sellers</option>
-              {uniqueSellers.slice(1).map(seller => (
-                <option key={seller} value={seller}>{seller}</option>
+              {uniqueSellers.slice(1).map((seller) => (
+                <option key={seller} value={seller}>
+                  {seller}
+                </option>
               ))}
             </select>
           </div>
@@ -601,12 +917,20 @@ const DashboardPage = ({ token, onShowToast }) => {
             <div className="empty-state">
               <CreditCard size={48} />
               <h3>No cards found</h3>
-              <p>{searchTerm || filterSeller ? 'Try adjusting your filters' : 'Start by updating your first card'}</p>
+              <p>
+                {searchTerm || filterSeller
+                  ? "Try adjusting your filters"
+                  : "Start by updating your first card"}
+              </p>
             </div>
           ) : (
             <>
               <div className="table-info">
-                <p>Showing {indexOfFirstCard + 1} - {Math.min(indexOfLastCard, filteredCards.length)} of {filteredCards.length} cards</p>
+                <p>
+                  Showing {indexOfFirstCard + 1} -{" "}
+                  {Math.min(indexOfLastCard, filteredCards.length)} of{" "}
+                  {filteredCards.length} cards
+                </p>
               </div>
               <div className="table-wrapper">
                 <table className="data-table">
@@ -634,11 +958,15 @@ const DashboardPage = ({ token, onShowToast }) => {
                         </td>
                         <td>{card.numberOfGames || 0}</td>
                         <td>
-                          <span className="amount-cell">₹{card.amount || 0}</span>
+                          <span className="amount-cell">
+                            ₹{card.amount || 0}
+                          </span>
                         </td>
                         <td>
-                          <span className={`payment-badge ${card.paymentType?.toLowerCase() || 'none'}`}>
-                            {card.paymentType || 'N/A'}
+                          <span
+                            className={`payment-badge ${card.paymentType?.toLowerCase() || "none"}`}
+                          >
+                            {card.paymentType || "N/A"}
                           </span>
                         </td>
                         <td className="date-cell">{formatDate(card.date)}</td>
@@ -660,19 +988,24 @@ const DashboardPage = ({ token, onShowToast }) => {
                   </button>
 
                   <div className="pagination-numbers">
-                    {getPageNumbers().map((page, index) => (
-                      page === '...' ? (
-                        <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                    {getPageNumbers().map((page, index) =>
+                      page === "..." ? (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="pagination-ellipsis"
+                        >
+                          ...
+                        </span>
                       ) : (
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
-                          className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                          className={`pagination-number ${currentPage === page ? "active" : ""}`}
                         >
                           {page}
                         </button>
-                      )
-                    ))}
+                      ),
+                    )}
                   </div>
 
                   <button
@@ -698,28 +1031,28 @@ const DashboardPage = ({ token, onShowToast }) => {
 // ============================================================================
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('login');
+  const [currentPage, setCurrentPage] = useState("login");
   const [token, setToken] = useState(null);
   const [toast, setToast] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('authToken');
+    const savedToken = localStorage.getItem("authToken");
     if (savedToken) {
       setToken(savedToken);
-      setCurrentPage('dashboard');
+      setCurrentPage("dashboard");
     }
   }, []);
 
   const handleLogin = (newToken) => {
     setToken(newToken);
-    setCurrentPage('dashboard');
+    setCurrentPage("dashboard");
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem("authToken");
     setToken(null);
-    setCurrentPage('login');
+    setCurrentPage("login");
     setMobileMenuOpen(false);
   };
 
@@ -753,26 +1086,38 @@ const App = () => {
             <CreditCard size={28} />
             <span>HITSORT</span>
           </div>
-          
-          <button 
+
+          <button
             className="mobile-menu-toggle"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          <div className={`navbar-menu ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+          <div className={`navbar-menu ${mobileMenuOpen ? "mobile-open" : ""}`}>
             <button
-              className={currentPage === 'dashboard' ? 'nav-link active' : 'nav-link'}
-              onClick={() => navigateTo('dashboard')}
+              className={
+                currentPage === "dashboard" ? "nav-link active" : "nav-link"
+              }
+              onClick={() => navigateTo("dashboard")}
             >
               Dashboard
             </button>
             <button
-              className={currentPage === 'update' ? 'nav-link active' : 'nav-link'}
-              onClick={() => navigateTo('update')}
+              className={
+                currentPage === "update" ? "nav-link active" : "nav-link"
+              }
+              onClick={() => navigateTo("update")}
             >
               Update Card
+            </button>
+            <button
+              className={
+                currentPage === "expenditure" ? "nav-link active" : "nav-link"
+              }
+              onClick={() => navigateTo("expenditure")}
+            >
+              Update Expenditure
             </button>
             <button className="btn-logout" onClick={handleLogout}>
               <LogOut size={18} />
@@ -783,17 +1128,24 @@ const App = () => {
       </nav>
 
       <main className="main-content">
-        {currentPage === 'dashboard' && (
+        {currentPage === "dashboard" && (
           <DashboardPage token={token} onShowToast={showToast} />
         )}
-        {currentPage === 'update' && (
+        {currentPage === "update" && (
           <UpdateCardPage token={token} onShowToast={showToast} />
+        )}
+        {currentPage === "expenditure" && (
+          <UpdateExpenditurePage token={token} onShowToast={showToast} />
         )}
       </main>
 
       {toast && (
         <div className="toast-container">
-          <Toast message={toast.message} type={toast.type} onClose={closeToast} />
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={closeToast}
+          />
         </div>
       )}
 
@@ -803,7 +1155,7 @@ const App = () => {
 };
 
 // ============================================================================
-// Optimized Styles with HitSort Theme + Pagination
+// Optimized Styles with HitSort Theme + Pagination + Expenditure Styles
 // ============================================================================
 
 const styles = `
@@ -835,6 +1187,7 @@ const styles = `
     --orange: #f97316;
     --purple: #a855f7;
     --yellow: #fbbf24;
+    --red: #ef4444;
     
     --success: #22c55e;
     --error: #ef4444;
@@ -1227,6 +1580,10 @@ const styles = `
     background: linear-gradient(135deg, var(--purple) 0%, #9333ea 100%);
   }
 
+  .stat-icon.red {
+    background: linear-gradient(135deg, var(--red) 0%, #dc2626 100%);
+  }
+
   .stat-content {
     flex: 1;
     min-width: 0;
@@ -1369,6 +1726,10 @@ const styles = `
     margin-bottom: 0.75rem;
   }
 
+  .seller-avatar.expenditure-avatar {
+    background: linear-gradient(135deg, var(--orange) 0%, var(--red) 100%);
+  }
+
   .seller-info h3 {
     font-size: 1.125rem;
     font-weight: 700;
@@ -1408,6 +1769,71 @@ const styles = `
 
   .metric-revenue {
     color: var(--green-primary);
+  }
+
+  /* ========== Expenditure Card Styles ========== */
+  .expenditure-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .expenditure-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 2px solid rgba(239, 68, 68, 0.2);
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .expenditure-total-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .expenditure-total-amount {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--red);
+  }
+
+  .expenditure-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .expenditure-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .expenditure-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(34, 211, 238, 0.3);
+  }
+
+  .expenditure-item-name {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .expenditure-item-amount {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--orange);
   }
 
   /* ========== Card Form ========== */
