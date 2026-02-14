@@ -592,10 +592,19 @@ const DashboardPage = ({ token, onShowToast }) => {
         }
       });
 
-      const sellerArray = Object.values(sellerMap).sort(
-        (a, b) => b.revenue - a.revenue,
-      );
-      setSellerStats(sellerArray);
+      const sellerArray = Object.values(sellerMap).sort((a, b) => b.revenue - a.revenue);
+     const enhancedSellerStats = sellerArray.map(seller => {
+      const submitted = submittedAmounts[seller.name] || 0;
+
+      return {
+         ...seller,
+        submitted,
+        balance: seller.revenue - submitted
+      };
+      });
+
+      setSellerStats(enhancedSellerStats);
+
 
       // Calculate expenditure stats grouped by person
       const expenditureMap = {};
@@ -820,6 +829,75 @@ const DashboardPage = ({ token, onShowToast }) => {
           </div>
         )}
       </div>
+      {/* ========== Revenue Settlement Section ========== */}
+<div className="seller-stats-section">
+  <div className="section-header">
+    <div className="section-title">
+      <DollarSign size={24} />
+      <h2>Revenue Settlement</h2>
+    </div>
+  </div>
+
+  {loading ? (
+    <div className="loading-state">
+      <div className="spinner"></div>
+      <p>Loading settlement data...</p>
+    </div>
+  ) : sellerStats.length === 0 ? (
+    <div className="empty-state">
+      <DollarSign size={48} />
+      <h3>No settlement data</h3>
+      <p>Seller revenue not available</p>
+    </div>
+  ) : (
+    <div className="seller-grid">
+      {sellerStats.map((seller) => (
+        <div key={seller.name} className="seller-card">
+
+          <div className="seller-info">
+            <div className="seller-avatar">
+              {seller.name.charAt(0)}
+            </div>
+            <h3>{seller.name}</h3>
+          </div>
+
+          <div className="seller-metrics">
+
+            {/* Total Revenue */}
+            <div className="metric">
+              <span className="metric-label">Total Revenue</span>
+              <span className="metric-value metric-revenue">
+                ₹{seller.revenue}
+              </span>
+            </div>
+
+            {/* Submitted */}
+            <div className="metric">
+              <span className="metric-label">Submitted</span>
+              <span className="metric-value">
+                ₹{seller.submitted}
+              </span>
+            </div>
+
+            {/* Balance */}
+            <div className="metric">
+              <span className="metric-label">Balance</span>
+              <span
+                className="metric-value"
+                style={{
+                  color: seller.balance >= 0 ? '#22c55e' : '#ef4444'
+                }}
+              >
+                ₹{seller.balance}
+              </span>
+            </div>
+
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
 
       <div className="seller-stats-section">
