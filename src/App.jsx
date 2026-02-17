@@ -342,7 +342,7 @@ const UpdateCardPage = ({ token, onShowToast }) => {
     "Pavan",
   ];
   const gameOptions = [1, 2];
-  const amountOptions = [0, 39, 49, 69, 79, 40, 50, 70, 80];
+  const amountOptions = [0, 39, 49, 69, 79, 40, 50, 70, 80,44,45,74,75,35,34,65,64];
   const paymentTypes = ["UPI", "CASH", "REFERRED"];
 
   const handleSubmit = async (e) => {
