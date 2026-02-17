@@ -512,7 +512,7 @@ const UpdateCardPage = ({ token, onShowToast }) => {
 const DashboardPage = ({ token, onShowToast }) => {
 
   const submittedAmounts = {
-  Anand: 900,
+  Anand: 1561,
   Manoj: 2839,
   Bharath: 2361,
   Sahith: 1457,
