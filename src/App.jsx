@@ -514,11 +514,11 @@ const DashboardPage = ({ token, onShowToast }) => {
   const submittedAmounts = {
   Anand: 1611,
   Manoj: 2839,
-  Bharath: 2361,
+  Bharath: 2401,
   Sahith: 1671,
-  Pavan: 1677,
-  Pandu: 1355,
-  Ratnakar: 1348,
+  Pavan: 1887,
+  Pandu: 1589,
+  Ratnakar: 1583,
   Yagnesh: 49
 };
 
